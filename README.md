@@ -1,5 +1,7 @@
 # Alia App Emprendedores - Inicio
 
+Creación de una app para emprendedores y comercios pequeños, enfocada en crecimiento económico mutuo y colaboración.
+
 Pantalla inicial de login inspirada en la referencia visual del proyecto.
 
 ## Archivos base
@@ -18,4 +20,3 @@ Pantalla inicial de login inspirada en la referencia visual del proyecto.
 ## Próximo paso recomendado
 
 Conectar el submit del formulario a un backend de autenticación (por ejemplo, Node.js + JWT + base de datos) y redirigir al dashboard cuando el login sea correcto.
-
