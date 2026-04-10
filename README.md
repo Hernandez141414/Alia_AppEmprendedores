@@ -1,22 +1,84 @@
-# Alia App Emprendedores - Inicio
+# Alia App - Entrepreneurs Platform
 
-Creación de una app para emprendedores y comercios pequeños, enfocada en crecimiento económico mutuo y colaboración.
+## Descripción
 
-Pantalla inicial de login inspirada en la referencia visual del proyecto.
+Aplicación web que conecta emprendedores, permitiéndoles promocionar productos y servicios, generar catálogos y colaborar en una comunidad en crecimiento.
 
-## Archivos base
+## Características (Fase 1)
 
-- `index.html`: estructura de la pantalla
-- `styles.css`: estilos y animaciones
-- `script.js`: interacción básica (mostrar/ocultar contraseña y validación inicial)
+✅ **Login** - Página de autenticación con validación básica  
+✅ **Página de Emprendimientos** - Grid de 4 cards/fila, paginación cada 12 cards (3 filas)  
+✅ **Navbar** - Navegación con búsqueda, tabs y logo  
+✅ **Diseño Responsivo** - Mobile-first con breakpoints optimizados  
+✅ **Mock Data** - 20 emprendimientos de ejemplo  
 
-## Abrir en Visual Studio / VS Code
+## Stack Tecnológico
 
-1. Abre la carpeta del proyecto:
-   - `C:\Users\fhernandez\Desktop\QA\Alia-AppEmprendedores`
-2. Abre `index.html` en el navegador.
-3. Si usas VS Code, instala la extensión `Live Server` y ejecuta "Open with Live Server".
+- **React 18** - Interfaz reactiva
+- **Vite** - Build rápida y desarrollo optimizado
+- **React Router v6** - Navegación entre páginas
+- **CSS Modules** - Estilos scoped sin conflictos
+- **Node.js** - Runtime y package manager
 
-## Próximo paso recomendado
+## Instalación
 
-Conectar el submit del formulario a un backend de autenticación (por ejemplo, Node.js + JWT + base de datos) y redirigir al dashboard cuando el login sea correcto.
+```bash
+npm install
+```
+
+## Desarrollo
+
+```bash
+npm run dev
+```
+
+El servidor estará disponible en `http://localhost:5173`
+
+## Build
+
+```bash
+npm run build
+```
+
+Genera los archivos de producción en la carpeta `dist/`
+
+## Rutas
+
+- `/` - Home (redirige a login)
+- `/login` - Página de inicio de sesión
+- `/emprendimientos` - Catálogo de emprendimientos
+- `/crear` - Crear nuevo emprendimiento (placeholder)
+- `/perfil` - Perfil de usuario (placeholder)
+
+## Estructura de Carpetas
+
+```
+src/
+├── components/
+│   ├── Navbar.jsx
+│   ├── Card.jsx
+│   ├── Pagination.jsx
+│   └── ...
+├── pages/
+│   ├── Login.jsx
+│   ├── Entrepreneurs.jsx
+│   ├── CreateEntrepreneur.jsx
+│   └── Profile.jsx
+├── data/
+│   └── entrepreneurs.json
+├── services/
+│   └── aiService.js
+├── styles/
+│   ├── global.css
+│   └── *.module.css
+└── App.jsx
+```
+
+## Próximas Fases
+
+- [ ] Integración con IA (descripciones de productos, optimización de imágenes)
+- [ ] Backend API (autenticación real, base de datos)
+- [ ] Sistema de catálogos
+- [ ] Búsqueda y filtros avanzados
+- [ ] Sistema de comentarios/reseñas
+- [ ] Directorio de enlaces entre emprendimientos

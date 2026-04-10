@@ -1,0 +1,124 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(128deg, #124844 0%, #1f6574 45%, #1a4f71 100%);
+  background-attachment: fixed;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px clamp(16px, 4vw, 60px);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+  animation: fadeInDown 600ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.header h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #fff;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.header p {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 300;
+  letter-spacing: 0.3px;
+}
+
+.grid-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 1600px;
+  animation: fadeInUp 700ms cubic-bezier(0.19, 1, 0.22, 1) 200ms backwards;
+}
+
+@supports (grid-template-columns: repeat(4, 1fr)) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1400px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 32px clamp(12px, 3vw, 48px);
+  }
+
+  .header {
+    margin-bottom: 40px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 24px 12px;
+  }
+
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .header h1 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+
+  .header p {
+    font-size: clamp(0.9rem, 2vw, 1rem);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

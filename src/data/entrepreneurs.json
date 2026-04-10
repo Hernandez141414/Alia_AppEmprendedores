@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "nombre": "Artesanías Luna",
+    "descripcion": "Handmade jewelry with natural stones and sustainable materials. Each piece is unique and carefully crafted.",
+    "preview": "https://images.unsplash.com/photo-1535303511933-0b06755c1bae?w=400&h=300&fit=crop",
+    "enlace": "https://artesanias-luna.com"
+  },
+  {
+    "id": 2,
+    "nombre": "Cafetería Aroma",
+    "descripcion": "Specialty coffee roasted fresh daily. Premium beans from sustainable farms across Latin America.",
+    "preview": "https://images.unsplash.com/photo-1511537190424-b30b829eab00?w=400&h=300&fit=crop",
+    "enlace": "https://cafeteria-aroma.com"
+  },
+  {
+    "id": 3,
+    "nombre": "Textiles Andinos",
+    "descripcion": "Traditional weaving techniques combined with modern designs. Supporting indigenous communities.",
+    "preview": "https://images.unsplash.com/photo-1541123603104-802b2b74147c?w=400&h=300&fit=crop",
+    "enlace": "https://textiles-andinos.com"
+  },
+  {
+    "id": 4,
+    "nombre": "Skincare Natural",
+    "descripcion": "Organic beauty products made with plant-based ingredients. Cruelty-free and eco-friendly formulations.",
+    "preview": "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=300&fit=crop",
+    "enlace": "https://skincare-natural.com"
+  },
+  {
+    "id": 5,
+    "nombre": "Madera Artesanal",
+    "descripcion": "Handcrafted wooden furniture and decorative pieces. Using reclaimed and sustainable wood sources.",
+    "preview": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop",
+    "enlace": "https://madera-artesanal.com"
+  },
+  {
+    "id": 6,
+    "nombre": "Repostería Dulce Vida",
+    "descripcion": "Personalized cakes and pastries for special occasions. Fresh ingredients and custom designs.",
+    "preview": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop",
+    "enlace": "https://reposteria-dulcevida.com"
+  },
+  {
+    "id": 7,
+    "nombre": "Diseño Digital Studio",
+    "descripcion": "Web design, graphic design, and digital marketing services. Creative solutions for your brand.",
+    "preview": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop",
+    "enlace": "https://diseno-digital-studio.com"
+  },
+  {
+    "id": 8,
+    "nombre": "Moda Sostenible",
+    "descripcion": "Eco-friendly fashion line with recycled materials. Supporting fair trade and ethical production.",
+    "preview": "https://images.unsplash.com/photo-1595521624512-37b2e054b94f?w=400&h=300&fit=crop",
+    "enlace": "https://moda-sostenible.com"
+  },
+  {
+    "id": 9,
+    "nombre": "Plantas Verdes Home",
+    "descripcion": "Indoor plants and gardening supplies. Expert advice on plant care and home greenery.",
+    "preview": "https://images.unsplash.com/photo-1531512073830-ba890ca3eba8?w=400&h=300&fit=crop",
+    "enlace": "https://plantas-verdes-home.com"
+  },
+  {
+    "id": 10,
+    "nombre": "Consultoría Negocios",
+    "descripcion": "Business consulting for startups and SMEs. Strategic planning and market analysis services.",
+    "preview": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
+    "enlace": "https://consultoria-negocios.com"
+  },
+  {
+    "id": 11,
+    "nombre": "Fotografía Eventos",
+    "descripcion": "Professional event photography and videography. Capturing your special moments beautifully.",
+    "preview": "https://images.unsplash.com/photo-1554080221-cbf25055ecd7?w=400&h=300&fit=crop",
+    "enlace": "https://fotografia-eventos.com"
+  },
+  {
+    "id": 12,
+    "nombre": "Clases Yoga Online",
+    "descripcion": "Live and recorded yoga classes for all levels. Online community with dedicated instructors.",
+    "preview": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop",
+    "enlace": "https://clases-yoga-online.com"
+  },
+  {
+    "id": 13,
+    "nombre": "Velas Aromáticas",
+    "descripcion": "Handmade soy candles with essential oils. Supporting local artisans and sustainable practices.",
+    "preview": "https://images.unsplash.com/photo-1559027615-cd2628902d4a?w=400&h=300&fit=crop",
+    "enlace": "https://velas-aromaticas.com"
+  },
+  {
+    "id": 14,
+    "nombre": "Taller Reparaciones",
+    "descripcion": "Electronics repair and maintenance services. Fast and reliable solutions for all devices.",
+    "preview": "https://images.unsplash.com/photo-1550960387-78015800e572?w=400&h=300&fit=crop",
+    "enlace": "https://taller-reparaciones.com"
+  },
+  {
+    "id": 15,
+    "nombre": "Chef Catering",
+    "descripcion": "Private chef and catering services. Customized menus for corporate events and celebrations.",
+    "preview": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+    "enlace": "https://chef-catering.com"
+  },
+  {
+    "id": 16,
+    "nombre": "Formación Tech",
+    "descripcion": "Online programming and tech courses. Industry-expert instructors and hands-on projects.",
+    "preview": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
+    "enlace": "https://formacion-tech.com"
+  },
+  {
+    "id": 17,
+    "nombre": "Veterinaria Pet Care",
+    "descripcion": "Full-service veterinary clinic for your pets. Preventive care, surgery, and emergency services.",
+    "preview": "https://images.unsplash.com/photo-1576091160599-112fa95ca9a0?w=400&h=300&fit=crop",
+    "enlace": "https://veterinaria-petcare.com"
+  },
+  {
+    "id": 18,
+    "nombre": "Servicios Limpieza",
+    "descripcion": "Professional cleaning services for homes and offices. Eco-friendly products and reliable team.",
+    "preview": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop",
+    "enlace": "https://servicios-limpieza.com"
+  },
+  {
+    "id": 19,
+    "nombre": "Coaching Personal",
+    "descripcion": "Life and wellness coaching. Personalized sessions for achieving your personal goals.",
+    "preview": "https://images.unsplash.com/photo-1552984770-24a4c3124737?w=400&h=300&fit=crop",
+    "enlace": "https://coaching-personal.com"
+  },
+  {
+    "id": 20,
+    "nombre": "Agencia Marketing",
+    "descripcion": "Digital marketing and social media management. Strategic campaigns to grow your brand.",
+    "preview": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
+    "enlace": "https://agencia-marketing.com"
+  }
+]

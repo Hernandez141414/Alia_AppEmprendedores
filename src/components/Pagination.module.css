@@ -1,0 +1,120 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 16px;
+  flex-wrap: wrap;
+}
+
+.btn-prev,
+.btn-next {
+  padding: 10px 20px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.btn-prev:hover:not(:disabled),
+.btn-next:hover:not(:disabled) {
+  border-color: var(--focus);
+  color: var(--focus);
+  background: rgba(15, 123, 167, 0.05);
+}
+
+.btn-prev:disabled,
+.btn-next:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-prev:active:not(:disabled),
+.btn-next:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.pages-container {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: grid;
+  place-items: center;
+}
+
+.page-btn:hover:not(.active) {
+  border-color: var(--focus);
+  color: var(--focus);
+  background: rgba(15, 123, 167, 0.05);
+}
+
+.page-btn.active {
+  background: linear-gradient(102deg, var(--accent-start), var(--accent-end));
+  border-color: transparent;
+  color: #f3f8fa;
+  box-shadow: 0 4px 12px rgba(14, 83, 54, 0.3);
+}
+
+.page-btn.active:hover {
+  filter: brightness(1.05);
+}
+
+.page-btn:active:not(.active) {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .pagination {
+    gap: 8px;
+    padding: 24px 12px;
+  }
+
+  .btn-prev,
+  .btn-next {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+
+  .page-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination {
+    gap: 6px;
+    padding: 20px 8px;
+  }
+
+  .btn-prev,
+  .btn-next {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  .page-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+}
