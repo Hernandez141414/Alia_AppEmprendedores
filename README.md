@@ -2,23 +2,15 @@
 
 ## Descripción
 
-Aplicación web que conecta emprendedores, permitiéndoles promocionar productos y servicios, generar catálogos y colaborar en una comunidad en crecimiento.
-
-## Características (Fase 1)
-
-✅ **Login** - Página de autenticación con validación básica  
-✅ **Página de Emprendimientos** - Grid de 4 cards/fila, paginación cada 12 cards (3 filas)  
-✅ **Navbar** - Navegación con búsqueda, tabs y logo  
-✅ **Diseño Responsivo** - Mobile-first con breakpoints optimizados  
-✅ **Mock Data** - 20 emprendimientos de ejemplo  
+Aplicación web para emprendedores y pequeños comercios. Esta fase incluye autenticación real (registro e inicio de sesión) usando backend en Express + Supabase Auth.
 
 ## Stack Tecnológico
 
-- **React 18** - Interfaz reactiva
-- **Vite** - Build rápida y desarrollo optimizado
-- **React Router v6** - Navegación entre páginas
-- **CSS Modules** - Estilos scoped sin conflictos
-- **Node.js** - Runtime y package manager
+- React 18 + Vite
+- React Router v6
+- CSS Modules
+- Node.js + Express
+- Supabase Auth
 
 ## Instalación
 
@@ -26,59 +18,48 @@ Aplicación web que conecta emprendedores, permitiéndoles promocionar productos
 npm install
 ```
 
-## Desarrollo
+## Configuración de entorno
+
+1. Copia `.env.example` a `.env`
+2. Completa las variables:
+
+```env
+PORT=4000
+CLIENT_ORIGIN=http://localhost:5173
+SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
+
+## Ejecutar proyecto
+
+Frontend (Vite):
 
 ```bash
 npm run dev
 ```
 
-El servidor estará disponible en `http://localhost:5173`
-
-## Build
+Backend (Express):
 
 ```bash
-npm run build
+npm run dev:server
 ```
 
-Genera los archivos de producción en la carpeta `dist/`
+## Endpoints backend
 
-## Rutas
+- `GET /api/health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me` (requiere `Authorization: Bearer <token>`)
 
-- `/` - Home (redirige a login)
-- `/login` - Página de inicio de sesión
-- `/emprendimientos` - Catálogo de emprendimientos
-- `/crear` - Crear nuevo emprendimiento (placeholder)
-- `/perfil` - Perfil de usuario (placeholder)
+## Notas importantes de Supabase
 
-## Estructura de Carpetas
+- El registro de usuarios se guarda en `auth.users` de Supabase.
+- Si tienes activa la confirmación por correo, el usuario debe verificar email antes de iniciar sesión.
+- Para pruebas rápidas, puedes desactivar temporalmente la confirmación en `Authentication > Providers > Email`.
 
-```
-src/
-├── components/
-│   ├── Navbar.jsx
-│   ├── Card.jsx
-│   ├── Pagination.jsx
-│   └── ...
-├── pages/
-│   ├── Login.jsx
-│   ├── Entrepreneurs.jsx
-│   ├── CreateEntrepreneur.jsx
-│   └── Profile.jsx
-├── data/
-│   └── entrepreneurs.json
-├── services/
-│   └── aiService.js
-├── styles/
-│   ├── global.css
-│   └── *.module.css
-└── App.jsx
-```
+## Rutas frontend
 
-## Próximas Fases
-
-- [ ] Integración con IA (descripciones de productos, optimización de imágenes)
-- [ ] Backend API (autenticación real, base de datos)
-- [ ] Sistema de catálogos
-- [ ] Búsqueda y filtros avanzados
-- [ ] Sistema de comentarios/reseñas
-- [ ] Directorio de enlaces entre emprendimientos
+- `/` y `/login`: formulario de registro/login
+- `/emprendimientos`: listado de emprendimientos
+- `/crear`: crear emprendimiento (placeholder)
+- `/perfil`: perfil (placeholder)

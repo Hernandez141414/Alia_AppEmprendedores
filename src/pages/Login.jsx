@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './Login.module.css'
+import { loginUser, registerUser } from '../services/authApi'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [mode, setMode] = useState('register')
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [message, setMessage] = useState('')
   const [isError, setIsError] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const isRegisterMode = mode === 'register'
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!email || !password) {
@@ -25,20 +31,49 @@ export default function Login() {
       return
     }
 
-    setMessage('')
-    setIsError(false)
-    // TODO: Connect to authentication API
-    console.log('Login attempt:', { email, password })
-    // Temporary: redirect to entrepreneurs page
-    setTimeout(() => navigate('/emprendimientos'), 500)
+    if (isRegisterMode && !fullName.trim()) {
+      setMessage('Ingresa tu nombre para crear la cuenta.')
+      setIsError(true)
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      setMessage('')
+      setIsError(false)
+
+      if (isRegisterMode) {
+        const response = await registerUser({ email, password, fullName })
+
+        if (response.session?.accessToken) {
+          persistAuthSession(response.session, response.user)
+          navigate('/emprendimientos')
+          return
+        }
+
+        setMessage(`${response.message} Luego inicia sesión.`)
+        setMode('login')
+        return
+      }
+
+      const response = await loginUser({ email, password })
+      persistAuthSession(response.session, response.user)
+      setMessage(response.message || 'Inicio de sesión exitoso.')
+      navigate('/emprendimientos')
+    } catch (error) {
+      setMessage(error.message || 'No se pudo completar la autenticación.')
+      setIsError(true)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <main className={styles.layout}>
       <section className={styles.ambient} aria-hidden="true">
-        <div className={styles['shape shape-a']}></div>
-        <div className={styles['shape shape-b']}></div>
-        <div className={styles['shape shape-c']}></div>
+        <div className={`${styles.shape} ${styles['shape-a']}`}></div>
+        <div className={`${styles.shape} ${styles['shape-b']}`}></div>
+        <div className={`${styles.shape} ${styles['shape-c']}`}></div>
       </section>
 
       <section className={styles['login-card']} aria-label="Formulario de inicio de sesión">
@@ -47,11 +82,46 @@ export default function Login() {
         </div>
 
         <header className={styles['card-header']}>
-          <h2>Empieza Gratis</h2>
-          <p>Vende, organiza precios y factura tu taller en un solo lugar.</p>
+          <h2>{isRegisterMode ? 'Empieza Gratis' : 'Bienvenida de nuevo'}</h2>
+          <p>
+            {isRegisterMode
+              ? 'Crea tu cuenta para gestionar tu negocio desde hoy.'
+              : 'Inicia sesión para seguir gestionando tus productos y facturas.'}
+          </p>
         </header>
 
         <form onSubmit={handleSubmit} className={styles['login-form']} noValidate>
+          {isRegisterMode && (
+            <>
+              <label className={styles['field-label']} htmlFor="fullName">
+                Nombre
+              </label>
+              <div className={styles['input-shell']}>
+                <span className={styles.icon} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" role="img" aria-label="">
+                    <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.7" />
+                    <path
+                      d="M5 18a7 7 0 0 1 14 0"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="Tu nombre"
+                  autoComplete="name"
+                  required={isRegisterMode}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           <label className={styles['field-label']} htmlFor="email">
             Correo
           </label>
@@ -155,8 +225,24 @@ export default function Login() {
             </button>
           </div>
 
-          <button className={styles['submit-btn']} type="submit">
-            Regístrame
+          <button className={styles['submit-btn']} type="submit" disabled={isLoading}>
+            {isLoading
+              ? 'Procesando...'
+              : isRegisterMode
+                ? 'Crear cuenta'
+                : 'Iniciar sesión'}
+          </button>
+
+          <button
+            className={styles['switch-mode']}
+            type="button"
+            onClick={() => {
+              setMessage('')
+              setIsError(false)
+              setMode(isRegisterMode ? 'login' : 'register')
+            }}
+          >
+            {isRegisterMode ? 'Ya tengo cuenta, iniciar sesión' : 'No tengo cuenta, registrarme'}
           </button>
 
           {message && (
@@ -166,8 +252,28 @@ export default function Login() {
           )}
         </form>
 
-        <footer className={styles['card-footer']}></footer>
+        <footer className={styles['card-footer']}>
+          <p>
+            <span>✧</span> Login seguro
+          </p>
+          <p>
+            <span>✧</span> Gestión para emprendedores
+          </p>
+        </footer>
       </section>
     </main>
+  )
+}
+
+function persistAuthSession(session, user) {
+  if (!session) return
+
+  localStorage.setItem(
+    'alia_auth',
+    JSON.stringify({
+      ...session,
+      user,
+      createdAt: new Date().toISOString(),
+    }),
   )
 }

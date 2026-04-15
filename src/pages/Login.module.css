@@ -19,7 +19,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("./assets/bg-login-reference.png");
+  background-image: url("../../assets/bg-login-reference.png");
   background-repeat: no-repeat;
   background-size: 138% auto;
   background-position: left center;
@@ -188,6 +188,27 @@
 
 .submit-btn:active {
   transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.switch-mode {
+  border: 0;
+  background: transparent;
+  color: #296a84;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  justify-self: center;
+  padding: 6px 4px;
+}
+
+.switch-mode:hover {
+  text-decoration: underline;
 }
 
 .message {
