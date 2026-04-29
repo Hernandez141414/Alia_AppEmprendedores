@@ -1,9 +1,11 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import multer from "multer";
+import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const requiredEnvVars = ["SUPABASE_URL", "SUPABASE_ANON_KEY"];
 const missingEnvVars = requiredEnvVars.filter((name) => !process.env[name]);
@@ -20,6 +22,16 @@ if (missingEnvVars.length > 0) {
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
+const creationDraftsTable = "creation_drafts";
+const geminiTextModel = process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash";
+const geminiImageModel =
+  process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image-preview";
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+});
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
@@ -37,6 +49,20 @@ const supabase = createClient(
   }
 );
 
+const supabaseDb = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
+      },
+    })
+  : supabase;
+
+const gemini = process.env.GEMINI_API_KEY
+  ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+  : null;
+
 app.use(
   cors({
     origin(origin, callback) {
@@ -53,7 +79,7 @@ app.use(
     },
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -61,6 +87,217 @@ app.get("/api/health", (_req, res) => {
     service: "alia-auth-api",
     timestamp: new Date().toISOString(),
   });
+});
+
+app.post("/api/ai/preview-image", upload.single("image"), async (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ message: "Debes enviar una imagen." });
+    return;
+  }
+
+  if (!isImageUpload(req.file)) {
+    res.status(400).json({ message: "El archivo debe ser una imagen válida." });
+    return;
+  }
+
+  if (!gemini) {
+    res.status(500).json({
+      message: "Falta GEMINI_API_KEY en el backend. Configúrala en .env.",
+    });
+    return;
+  }
+
+  try {
+    const response = await gemini.models.generateContent({
+      model: geminiImageModel,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text:
+                "Edita esta imagen de producto. Mantén intacto el producto (forma, etiqueta, colores y proporciones), mejora nitidez e iluminación, y cambia el fondo a uno cálido y profesional para ecommerce. No cambies el producto.",
+            },
+            {
+              inlineData: {
+                mimeType: req.file.mimetype || "image/jpeg",
+                data: req.file.buffer.toString("base64"),
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const imagePart = findImagePart(response);
+
+    if (!imagePart?.data) {
+      res.status(502).json({
+        message:
+          "Gemini no devolvió imagen en esta solicitud. Intenta de nuevo o usa otro modelo en GEMINI_IMAGE_MODEL.",
+        details: readResponseText(response) || undefined,
+      });
+      return;
+    }
+
+    res.json({
+      message: "Previsualización de mejora lista.",
+      source: "gemini",
+      model: geminiImageModel,
+      original: {
+        name: req.file.originalname,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+      },
+      enhancedImageDataUrl: toDataUrl(
+        Buffer.from(imagePart.data, "base64"),
+        imagePart.mimeType || "image/png"
+      ),
+    });
+  } catch (error) {
+    const mapped = mapGeminiError(error, "image");
+    res.status(mapped.status).json({ message: mapped.message, details: mapped.details });
+  }
+});
+
+app.post("/api/ai/generate-description", upload.single("audio"), async (req, res) => {
+  const notes = typeof req.body?.notes === "string" ? req.body.notes.trim() : "";
+  const audioFile = req.file;
+
+  if (!notes && !audioFile) {
+    res.status(400).json({
+      message: "Envía texto o una nota de audio para generar la descripción.",
+    });
+    return;
+  }
+
+  if (!gemini) {
+    res.status(500).json({
+      message: "Falta GEMINI_API_KEY en el backend. Configúrala en .env.",
+    });
+    return;
+  }
+
+  const parts = [];
+  let audioContext = null;
+
+  if (audioFile) {
+    parts.push({
+      inlineData: {
+        mimeType: audioFile.mimetype || "audio/webm",
+        data: audioFile.buffer.toString("base64"),
+      },
+    });
+    audioContext = `Audio recibido (${audioFile.originalname || "nota"}).`;
+  }
+
+  parts.push({
+    text: buildDescriptionPrompt(notes),
+  });
+
+  try {
+    const response = await gemini.models.generateContent({
+      model: geminiTextModel,
+      contents: [{ role: "user", parts }],
+      config: {
+        responseMimeType: "application/json",
+        temperature: 0.7,
+      },
+    });
+
+    const parsed = parseDescriptionResponse(readResponseText(response));
+    if (!parsed || !Array.isArray(parsed.options) || parsed.options.length === 0) {
+      res.status(502).json({
+        message: "No se pudo interpretar la respuesta de Gemini para la descripción.",
+      });
+      return;
+    }
+
+    res.json({
+      message: "Opciones de descripción generadas.",
+      source: "gemini",
+      model: geminiTextModel,
+      transcript: parsed.transcript || null,
+      audioContext,
+      options: parsed.options
+        .filter((option) => option?.text)
+        .map((option, index) => ({
+          id: option.id || `option-${index + 1}`,
+          label: option.label || `Opción ${index + 1}`,
+          text: option.text.trim(),
+        })),
+    });
+  } catch (error) {
+    const mapped = mapGeminiError(error, "text");
+    res.status(mapped.status).json({ message: mapped.message, details: mapped.details });
+  }
+});
+
+app.post("/api/ai/finalize", async (req, res) => {
+  const {
+    selectedDescription,
+    notes = "",
+    imageMode = "original",
+    hasAudio = false,
+    imageName = null,
+  } = req.body ?? {};
+
+  if (typeof selectedDescription !== "string" || !selectedDescription.trim()) {
+    res.status(400).json({
+      message: "Debes seleccionar o escribir una descripción final.",
+    });
+    return;
+  }
+
+  const insertPayload = {
+    selected_description: selectedDescription.trim(),
+    notes: typeof notes === "string" ? notes.trim() : "",
+    image_mode: imageMode === "enhanced" ? "enhanced" : "original",
+    has_audio: Boolean(hasAudio),
+    image_name: typeof imageName === "string" ? imageName : null,
+  };
+
+  const { data, error } = await supabaseDb
+    .from(creationDraftsTable)
+    .insert(insertPayload)
+    .select("id, selected_description, notes, image_mode, has_audio, image_name, created_at")
+    .single();
+
+  if (error) {
+    res.status(mapDbErrorStatus(error)).json({
+      message: mapDraftDbError(error, Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)),
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+    return;
+  }
+
+  res.status(201).json({
+    message: "Borrador final guardado. Puedes publicarlo en el siguiente paso.",
+    draft: toDraftResponse(data),
+  });
+});
+
+app.get("/api/ai/finalize/:id", async (req, res) => {
+  const { data, error } = await supabaseDb
+    .from(creationDraftsTable)
+    .select("id, selected_description, notes, image_mode, has_audio, image_name, created_at")
+    .eq("id", req.params.id)
+    .maybeSingle();
+
+  if (error) {
+    res.status(mapDbErrorStatus(error)).json({
+      message: mapDraftDbError(error, Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)),
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+    return;
+  }
+
+  if (!data) {
+    res.status(404).json({ message: "No se encontró el borrador solicitado." });
+    return;
+  }
+
+  res.json({ draft: toDraftResponse(data) });
 });
 
 app.post("/api/auth/register", async (req, res) => {
@@ -218,5 +455,165 @@ function normalizeAuthError(message = "") {
   }
 
   return message || "Ocurrió un error de autenticación.";
+}
+
+function toDataUrl(buffer, mimeType) {
+  return `data:${mimeType};base64,${buffer.toString("base64")}`;
+}
+
+function buildDescriptionPrompt(notes) {
+  const notesLine = notes?.trim()
+    ? `Texto de apoyo del usuario: "${notes.trim()}".`
+    : "No hay texto adicional del usuario.";
+
+  return `
+Genera contenido comercial en español para un producto emprendedor.
+${notesLine}
+
+Si recibes audio, primero transcríbelo y úsalo como base principal.
+
+Devuelve SOLO JSON válido con esta estructura:
+{
+  "transcript": "string o null",
+  "options": [
+    { "id": "impacto", "label": "Impacto comercial", "text": "..." },
+    { "id": "emocional", "label": "Conexión emocional", "text": "..." },
+    { "id": "redes", "label": "Estilo redes sociales", "text": "..." }
+  ]
+}
+
+Cada texto debe ser persuasivo, claro y realista, sin exageraciones engañosas.
+  `.trim();
+}
+
+function findImagePart(response) {
+  for (const candidate of response?.candidates || []) {
+    for (const part of candidate?.content?.parts || []) {
+      if (part?.inlineData?.data) {
+        return {
+          data: part.inlineData.data,
+          mimeType: part.inlineData.mimeType,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function readResponseText(response) {
+  if (typeof response?.text === "string") {
+    return response.text;
+  }
+
+  if (typeof response?.text === "function") {
+    return response.text();
+  }
+
+  const firstTextPart = response?.candidates?.[0]?.content?.parts?.find(
+    (part) => typeof part?.text === "string"
+  );
+  return firstTextPart?.text || "";
+}
+
+function parseDescriptionResponse(rawText) {
+  if (!rawText) return null;
+
+  const cleanText = rawText
+    .replace(/^```json\s*/i, "")
+    .replace(/^```/i, "")
+    .replace(/```$/i, "")
+    .trim();
+
+  try {
+    return JSON.parse(cleanText);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function mapGeminiError(error, taskType) {
+  const rawMessage = error?.message || "Error desconocido de Gemini.";
+  const status = Number(error?.status || error?.code) || 502;
+  const lower = rawMessage.toLowerCase();
+
+  if (lower.includes("api key")) {
+    return {
+      status: 401,
+      message: "GEMINI_API_KEY inválida o no autorizada.",
+      details: rawMessage,
+    };
+  }
+
+  if (lower.includes("quota") || lower.includes("rate limit") || status === 429) {
+    return {
+      status: 429,
+      message: "Se alcanzó el límite de uso de Gemini. Intenta más tarde o revisa tu cuota.",
+      details: rawMessage,
+    };
+  }
+
+  if (lower.includes("not found") || status === 404) {
+    return {
+      status: 404,
+      message: `El modelo de Gemini no está disponible para ${taskType}. Revisa GEMINI_${taskType === "image" ? "IMAGE" : "TEXT"}_MODEL.`,
+      details: rawMessage,
+    };
+  }
+
+  if (lower.includes("permission") || status === 403) {
+    return {
+      status: 403,
+      message: "Tu cuenta/proyecto no tiene acceso a este modelo de Gemini.",
+      details: rawMessage,
+    };
+  }
+
+  return {
+    status: status >= 400 && status < 600 ? status : 502,
+    message: "Gemini devolvió un error durante el procesamiento.",
+    details: rawMessage,
+  };
+}
+
+function isImageUpload(file) {
+  if (!file) return false;
+  if (typeof file.mimetype === "string" && file.mimetype.startsWith("image/")) {
+    return true;
+  }
+
+  return /\.(png|jpe?g|webp)$/i.test(file.originalname || "");
+}
+
+function toDraftResponse(row) {
+  return {
+    id: row.id,
+    selectedDescription: row.selected_description,
+    notes: row.notes,
+    imageMode: row.image_mode,
+    hasAudio: row.has_audio,
+    imageName: row.image_name,
+    createdAt: row.created_at,
+  };
+}
+
+function mapDbErrorStatus(error) {
+  if (error?.code === "42P01") return 500;
+  if (error?.code === "42501") return 403;
+  return 400;
+}
+
+function mapDraftDbError(error, usingServiceRole) {
+  if (error?.code === "42P01") {
+    return `La tabla '${creationDraftsTable}' no existe en Supabase. Ejecuta el SQL de setup para crearla.`;
+  }
+
+  if (error?.code === "42501") {
+    return usingServiceRole
+      ? "No hay permisos suficientes para guardar el borrador. Revisa las políticas de la tabla."
+      : "No hay permisos para guardar el borrador con la llave actual. Configura SUPABASE_SERVICE_ROLE_KEY en el backend.";
+  }
+
+  return error?.message || "No se pudo guardar el borrador en Supabase.";
 }
 

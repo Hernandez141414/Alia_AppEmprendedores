@@ -6,15 +6,23 @@ import entrepreneurs from '../data/entrepreneurs.json'
 import styles from './Entrepreneurs.module.css'
 
 const ITEMS_PER_PAGE = 12 // 3 rows × 4 columns
+const CREATED_ENTREPRENEURS_KEY = 'alia_created_entrepreneurs'
 
 export default function Entrepreneurs() {
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = Math.ceil(entrepreneurs.length / ITEMS_PER_PAGE)
+  const [createdItems, setCreatedItems] = useState([])
+
+  useEffect(() => {
+    setCreatedItems(readCreatedEntrepreneurs())
+  }, [])
+
+  const allEntrepreneurs = [...createdItems, ...entrepreneurs]
+  const totalPages = Math.ceil(allEntrepreneurs.length / ITEMS_PER_PAGE)
 
   // Get items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentItems = entrepreneurs.slice(startIndex, endIndex)
+  const currentItems = allEntrepreneurs.slice(startIndex, endIndex)
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -59,4 +67,15 @@ export default function Entrepreneurs() {
       </main>
     </div>
   )
+}
+
+function readCreatedEntrepreneurs() {
+  try {
+    const raw = localStorage.getItem(CREATED_ENTREPRENEURS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (_error) {
+    return []
+  }
 }
