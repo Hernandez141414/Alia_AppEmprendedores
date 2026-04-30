@@ -24,8 +24,6 @@ const app = express();
 const port = Number(process.env.PORT || 4000);
 const creationDraftsTable = "creation_drafts";
 const geminiTextModel = process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash";
-const geminiImageModel =
-  process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image-preview";
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -87,77 +85,6 @@ app.get("/api/health", (_req, res) => {
     service: "alia-auth-api",
     timestamp: new Date().toISOString(),
   });
-});
-
-app.post("/api/ai/preview-image", upload.single("image"), async (req, res) => {
-  if (!req.file) {
-    res.status(400).json({ message: "Debes enviar una imagen." });
-    return;
-  }
-
-  if (!isImageUpload(req.file)) {
-    res.status(400).json({ message: "El archivo debe ser una imagen válida." });
-    return;
-  }
-
-  if (!gemini) {
-    res.status(500).json({
-      message: "Falta GEMINI_API_KEY en el backend. Configúrala en .env.",
-    });
-    return;
-  }
-
-  try {
-    const response = await gemini.models.generateContent({
-      model: geminiImageModel,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text:
-                "Edita esta imagen de producto. Mantén intacto el producto (forma, etiqueta, colores y proporciones), mejora nitidez e iluminación, y cambia el fondo a uno cálido y profesional para ecommerce. No cambies el producto.",
-            },
-            {
-              inlineData: {
-                mimeType: req.file.mimetype || "image/jpeg",
-                data: req.file.buffer.toString("base64"),
-              },
-            },
-          ],
-        },
-      ],
-    });
-
-    const imagePart = findImagePart(response);
-
-    if (!imagePart?.data) {
-      res.status(502).json({
-        message:
-          "Gemini no devolvió imagen en esta solicitud. Intenta de nuevo o usa otro modelo en GEMINI_IMAGE_MODEL.",
-        details: readResponseText(response) || undefined,
-      });
-      return;
-    }
-
-    res.json({
-      message: "Previsualización de mejora lista.",
-      source: "gemini",
-      model: geminiImageModel,
-      original: {
-        name: req.file.originalname,
-        size: req.file.size,
-        mimeType: req.file.mimetype,
-      },
-      enhancedImageDataUrl: toDataUrl(
-        Buffer.from(imagePart.data, "base64"),
-        imagePart.mimeType || "image/png"
-      ),
-    });
-  } catch (error) {
-    const mapped = mapGeminiError(error, "image");
-    res.status(mapped.status).json({ message: mapped.message, details: mapped.details });
-  }
 });
 
 app.post("/api/ai/generate-description", upload.single("audio"), async (req, res) => {
@@ -228,7 +155,7 @@ app.post("/api/ai/generate-description", upload.single("audio"), async (req, res
         })),
     });
   } catch (error) {
-    const mapped = mapGeminiError(error, "text");
+    const mapped = mapGeminiError(error);
     res.status(mapped.status).json({ message: mapped.message, details: mapped.details });
   }
 });
@@ -237,7 +164,6 @@ app.post("/api/ai/finalize", async (req, res) => {
   const {
     selectedDescription,
     notes = "",
-    imageMode = "original",
     hasAudio = false,
     imageName = null,
   } = req.body ?? {};
@@ -252,7 +178,7 @@ app.post("/api/ai/finalize", async (req, res) => {
   const insertPayload = {
     selected_description: selectedDescription.trim(),
     notes: typeof notes === "string" ? notes.trim() : "",
-    image_mode: imageMode === "enhanced" ? "enhanced" : "original",
+    image_mode: "original",
     has_audio: Boolean(hasAudio),
     image_name: typeof imageName === "string" ? imageName : null,
   };
@@ -457,10 +383,6 @@ function normalizeAuthError(message = "") {
   return message || "Ocurrió un error de autenticación.";
 }
 
-function toDataUrl(buffer, mimeType) {
-  return `data:${mimeType};base64,${buffer.toString("base64")}`;
-}
-
 function buildDescriptionPrompt(notes) {
   const notesLine = notes?.trim()
     ? `Texto de apoyo del usuario: "${notes.trim()}".`
@@ -484,21 +406,6 @@ Devuelve SOLO JSON válido con esta estructura:
 
 Cada texto debe ser persuasivo, claro y realista, sin exageraciones engañosas.
   `.trim();
-}
-
-function findImagePart(response) {
-  for (const candidate of response?.candidates || []) {
-    for (const part of candidate?.content?.parts || []) {
-      if (part?.inlineData?.data) {
-        return {
-          data: part.inlineData.data,
-          mimeType: part.inlineData.mimeType,
-        };
-      }
-    }
-  }
-
-  return null;
 }
 
 function readResponseText(response) {
@@ -532,7 +439,7 @@ function parseDescriptionResponse(rawText) {
   }
 }
 
-function mapGeminiError(error, taskType) {
+function mapGeminiError(error) {
   const rawMessage = error?.message || "Error desconocido de Gemini.";
   const status = Number(error?.status || error?.code) || 502;
   const lower = rawMessage.toLowerCase();
@@ -556,7 +463,7 @@ function mapGeminiError(error, taskType) {
   if (lower.includes("not found") || status === 404) {
     return {
       status: 404,
-      message: `El modelo de Gemini no está disponible para ${taskType}. Revisa GEMINI_${taskType === "image" ? "IMAGE" : "TEXT"}_MODEL.`,
+      message: "El modelo de Gemini no está disponible. Revisa GEMINI_TEXT_MODEL.",
       details: rawMessage,
     };
   }
@@ -574,15 +481,6 @@ function mapGeminiError(error, taskType) {
     message: "Gemini devolvió un error durante el procesamiento.",
     details: rawMessage,
   };
-}
-
-function isImageUpload(file) {
-  if (!file) return false;
-  if (typeof file.mimetype === "string" && file.mimetype.startsWith("image/")) {
-    return true;
-  }
-
-  return /\.(png|jpe?g|webp)$/i.test(file.originalname || "");
 }
 
 function toDraftResponse(row) {

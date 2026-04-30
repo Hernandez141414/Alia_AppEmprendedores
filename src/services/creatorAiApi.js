@@ -1,11 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-export async function requestImageEnhancement(imageFile) {
-  const formData = new FormData();
-  formData.append("image", imageFile);
-  return postFormData("/api/ai/preview-image", formData);
-}
-
 export async function requestDescriptionGeneration({ notes, audioBlob }) {
   const formData = new FormData();
 
