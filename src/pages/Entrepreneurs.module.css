@@ -54,6 +54,132 @@
   }
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 19, 24, 0.62);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 12px;
+  z-index: 120;
+}
+
+.modal {
+  position: relative;
+  width: min(100%, 420px);
+  max-height: min(92vh, 760px);
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #f7fafb;
+  border: 1px solid rgba(6, 56, 70, 0.1);
+  box-shadow: 0 26px 60px rgba(1, 19, 25, 0.38);
+  padding: 18px 16px 18px;
+}
+
+.modalClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(6, 56, 70, 0.1);
+  color: #1e4a68;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modalImage {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.modalTitle {
+  margin: 16px 0 8px;
+  color: #173e5b;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.modalPrice {
+  margin: 0 0 10px;
+  color: #0e5536;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.modalDescription {
+  margin: 0 0 18px;
+  color: #364954;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+.actionGroup {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.contactButton {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: #0a7a6b;
+  color: #f4fffd;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(9, 61, 45, 0.22);
+}
+
+.contactButton:hover {
+  transform: translateY(-1px);
+}
+
+.contactButtonDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.buyButton {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(102deg, #0f6d46, #0c4f3d);
+  color: #f6fbf9;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(9, 61, 45, 0.28);
+}
+
+.buyButton:hover {
+  transform: translateY(-1px);
+}
+
+.buyButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.modalStatus {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: #355060;
+}
+
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -120,5 +246,23 @@
   .grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .modal {
+    width: min(100%, 380px);
+    border-radius: 15px;
+    padding: 14px;
+  }
+
+  .modalImage {
+    height: 190px;
+  }
+
+  .modalTitle {
+    font-size: 1.02rem;
+  }
+
+  .modalPrice {
+    font-size: 1.08rem;
   }
 }

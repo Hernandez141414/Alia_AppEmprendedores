@@ -1,6 +1,6 @@
 import styles from './Card.module.css'
 
-export default function Card({ nombre, descripcion, preview, enlace }) {
+export default function Card({ nombre, descripcion, preview, onViewMore }) {
   return (
     <article className={styles.card}>
       <div className={styles['preview-wrapper']}>
@@ -17,14 +17,13 @@ export default function Card({ nombre, descripcion, preview, enlace }) {
       </div>
 
       <div className={styles.footer}>
-        <a
-          href={enlace}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={onViewMore}
           className={styles['cta-btn']}
         >
           Ver más
-        </a>
+        </button>
       </div>
     </article>
   )

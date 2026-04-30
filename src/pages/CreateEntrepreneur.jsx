@@ -10,6 +10,7 @@ import {
 export default function CreateEntrepreneur() {
   const navigate = useNavigate()
   const [productName, setProductName] = useState('')
+  const [whatsappNumber, setWhatsappNumber] = useState('')
   const [productImage, setProductImage] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const [notes, setNotes] = useState('')
@@ -159,6 +160,13 @@ export default function CreateEntrepreneur() {
       return
     }
 
+    const cleanWhatsapp = sanitizePhone(whatsappNumber)
+    if (whatsappNumber.trim() && cleanWhatsapp.length < 8) {
+      setStatus('El número de WhatsApp parece incompleto. Revisa el formato internacional.')
+      setIsError(true)
+      return
+    }
+
     try {
       setIsFinalizing(true)
       setStatus('Guardando borrador final...')
@@ -183,6 +191,7 @@ export default function CreateEntrepreneur() {
         descripcion: selectedDescription.trim(),
         preview: previewForCard,
         enlace: '#',
+        whatsapp: cleanWhatsapp || null,
         createdAt: response.draft.createdAt,
       })
 
@@ -205,6 +214,7 @@ export default function CreateEntrepreneur() {
     setProductImage(null)
     setPreviewUrl('')
     setProductName('')
+    setWhatsappNumber('')
     setNotes('')
     setAudioBlob(null)
     setAudioUrl('')
@@ -299,6 +309,16 @@ export default function CreateEntrepreneur() {
                 value={productName}
                 onChange={(event) => setProductName(event.target.value)}
                 placeholder="Ejemplo: Jabón Natural Avena"
+                className={styles.textInput}
+              />
+
+              <label htmlFor="product-whatsapp">WhatsApp para ventas</label>
+              <input
+                id="product-whatsapp"
+                type="tel"
+                value={whatsappNumber}
+                onChange={(event) => setWhatsappNumber(event.target.value)}
+                placeholder="Ejemplo: 50255554444"
                 className={styles.textInput}
               />
 
@@ -434,4 +454,8 @@ function inferProductName(notes) {
     .replace(/[.,;:!?]$/g, '')
 
   return candidate.length > 2 ? candidate : 'Nuevo emprendimiento IA'
+}
+
+function sanitizePhone(value) {
+  return String(value || '').replace(/\D/g, '')
 }
