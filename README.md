@@ -31,6 +31,7 @@ SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 GEMINI_TEXT_MODEL=gemini-2.5-flash
+VITE_DEFAULT_WHATSAPP=50255555555
 ```
 
 ## Ejecutar proyecto
@@ -81,5 +82,9 @@ Los endpoints de IA usan Gemini:
 
 - `/` y `/login`: formulario de registro/login
 - `/emprendimientos`: listado de emprendimientos
-- `/crear`: flujo IA de creación de emprendimiento con previsualización
+- `/crear`: flujo IA de creación de emprendimiento con previsualización y campo de WhatsApp
 - `/perfil`: perfil (placeholder)
+
+En el modal de "Ver más", el botón "Comunícate" abre WhatsApp.
+- Si el producto trae un número propio (`whatsapp` o `telefono`), usa ese.
+- Si no trae número, usa `VITE_DEFAULT_WHATSAPP`.

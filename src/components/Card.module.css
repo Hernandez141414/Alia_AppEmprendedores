@@ -74,10 +74,12 @@
   padding: 10px 20px;
   background: linear-gradient(102deg, var(--accent-start), var(--accent-end));
   color: #f3f8fa;
+  border: none;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
   transition: all 200ms ease;
   box-shadow: 0 4px 12px rgba(14, 83, 54, 0.2);
 }
