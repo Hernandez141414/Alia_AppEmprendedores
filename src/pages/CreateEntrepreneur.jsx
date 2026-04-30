@@ -5,7 +5,6 @@ import styles from './CreateEntrepreneur.module.css'
 import {
   finalizeCreationDraft,
   requestDescriptionGeneration,
-  requestImageEnhancement,
 } from '../services/creatorAiApi'
 
 export default function CreateEntrepreneur() {
@@ -21,9 +20,6 @@ export default function CreateEntrepreneur() {
   const [descriptionOptions, setDescriptionOptions] = useState([])
   const [selectedDescription, setSelectedDescription] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isEnhancingImage, setIsEnhancingImage] = useState(false)
-  const [enhancedPreviewUrl, setEnhancedPreviewUrl] = useState('')
-  const [selectedImageVersion, setSelectedImageVersion] = useState('original')
   const [isFinalizing, setIsFinalizing] = useState(false)
   const [finalDraftId, setFinalDraftId] = useState('')
   const [status, setStatus] = useState('')
@@ -52,14 +48,11 @@ export default function CreateEntrepreneur() {
     const nextUrl = URL.createObjectURL(file)
     setProductImage(file)
     setPreviewUrl(nextUrl)
-    setEnhancedPreviewUrl('')
-    setSelectedImageVersion('original')
     setDescriptionOptions([])
     setSelectedDescription('')
     setFinalDraftId('')
     setStatus('Imagen cargada correctamente.')
     setIsError(false)
-    setIsEnhancingImage(false)
   }
 
   const handleDrop = (event) => {
@@ -77,31 +70,6 @@ export default function CreateEntrepreneur() {
   const handleDragLeave = (event) => {
     if (event.currentTarget.contains(event.relatedTarget)) return
     setIsDragging(false)
-  }
-
-  const handleImageEnhance = async () => {
-    if (!productImage) {
-      setStatus('Primero sube la foto del producto para mejorarla.')
-      setIsError(true)
-      return
-    }
-
-    try {
-      setIsEnhancingImage(true)
-      setStatus('Generando vista previa mejorada...')
-      setIsError(false)
-
-      const response = await requestImageEnhancement(productImage)
-      setEnhancedPreviewUrl(response.enhancedImageDataUrl)
-      setSelectedImageVersion('enhanced')
-      setStatus('Mejora de imagen lista. Compara y elige la versión final.')
-      setIsError(false)
-    } catch (error) {
-      setStatus(error.message || 'No fue posible mejorar la imagen.')
-      setIsError(true)
-    } finally {
-      setIsEnhancingImage(false)
-    }
   }
 
   const toggleRecording = async () => {
@@ -200,13 +168,11 @@ export default function CreateEntrepreneur() {
         selectedDescription,
         notes,
         hasAudio: Boolean(audioBlob),
-        imageMode: selectedImageVersion,
+        imageMode: 'original',
         imageName: productImage?.name || null,
       })
 
       const previewForCard = await buildCardPreview({
-        selectedImageVersion,
-        enhancedPreviewUrl,
         productImage,
         previewUrl,
       })
@@ -244,8 +210,6 @@ export default function CreateEntrepreneur() {
     setAudioUrl('')
     setDescriptionOptions([])
     setSelectedDescription('')
-    setEnhancedPreviewUrl('')
-    setSelectedImageVersion('original')
     setFinalDraftId('')
     setStatus('Proceso reiniciado. Puedes comenzar con un nuevo producto.')
     setIsError(false)
@@ -304,34 +268,7 @@ export default function CreateEntrepreneur() {
 
             {previewUrl && (
               <div className={styles.previewWrap}>
-                {!enhancedPreviewUrl ? (
-                  <img src={previewUrl} alt="Vista previa del producto" className={styles.previewImage} />
-                ) : (
-                  <div className={styles.previewCompare}>
-                    <button
-                      type="button"
-                      className={`${styles.previewCard} ${selectedImageVersion === 'original' ? styles.activeCard : ''}`}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        setSelectedImageVersion('original')
-                      }}
-                    >
-                      <span>Original</span>
-                      <img src={previewUrl} alt="Versión original" className={styles.previewImage} />
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.previewCard} ${selectedImageVersion === 'enhanced' ? styles.activeCard : ''}`}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        setSelectedImageVersion('enhanced')
-                      }}
-                    >
-                      <span>Mejorada IA</span>
-                      <img src={enhancedPreviewUrl} alt="Versión mejorada por IA" className={styles.previewImage} />
-                    </button>
-                  </div>
-                )}
+                <img src={previewUrl} alt="Vista previa del producto" className={styles.previewImage} />
                 <button
                   type="button"
                   className={styles.clearButton}
@@ -340,12 +277,9 @@ export default function CreateEntrepreneur() {
                     if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
                     setPreviewUrl('')
                     setProductImage(null)
-                    setEnhancedPreviewUrl('')
-                    setSelectedImageVersion('original')
                     setDescriptionOptions([])
                     setSelectedDescription('')
                     setFinalDraftId('')
-                    setIsEnhancingImage(false)
                     setStatus('Imagen eliminada.')
                     setIsError(false)
                   }}
@@ -393,9 +327,6 @@ export default function CreateEntrepreneur() {
           </div>
 
           <div className={styles.actions}>
-            <button type="button" className={styles.secondaryBtn} onClick={handleImageEnhance}>
-              {isEnhancingImage ? 'Mejorando...' : 'Mejorar imagen'}
-            </button>
             <button type="button" className={styles.primaryBtn} onClick={handleGenerate} disabled={isGenerating}>
               {isGenerating ? 'Generando...' : 'Generar descripción ✨'}
             </button>
@@ -435,7 +366,7 @@ export default function CreateEntrepreneur() {
                 type="button"
                 className={styles.secondaryBtn}
                 onClick={handleRestart}
-                disabled={isFinalizing || isGenerating || isEnhancingImage}
+                disabled={isFinalizing || isGenerating}
               >
                 Iniciar de nuevo
               </button>
@@ -475,11 +406,7 @@ function readCreatedEntrepreneurs() {
   }
 }
 
-async function buildCardPreview({ selectedImageVersion, enhancedPreviewUrl, productImage, previewUrl }) {
-  if (selectedImageVersion === 'enhanced' && enhancedPreviewUrl) {
-    return enhancedPreviewUrl
-  }
-
+async function buildCardPreview({ productImage, previewUrl }) {
   if (productImage) {
     return fileToDataUrl(productImage)
   }
