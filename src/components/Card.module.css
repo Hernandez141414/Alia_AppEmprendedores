@@ -20,13 +20,17 @@
   width: 100%;
   height: 200px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #e8f0f3, #f0f5f7);
 }
 
 .preview {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 10px;
   transition: transform 300ms ease;
 }
 

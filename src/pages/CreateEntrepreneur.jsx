@@ -10,6 +10,7 @@ import {
 export default function CreateEntrepreneur() {
   const navigate = useNavigate()
   const [productName, setProductName] = useState('')
+  const [productPrice, setProductPrice] = useState('')
   const [whatsappNumber, setWhatsappNumber] = useState('')
   const [productImage, setProductImage] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
@@ -160,6 +161,13 @@ export default function CreateEntrepreneur() {
       return
     }
 
+    const normalizedPrice = normalizePriceInput(productPrice)
+    if (productPrice.trim() && normalizedPrice === null) {
+      setStatus('Ingresa un precio válido. Ejemplo: 15 o 15.50')
+      setIsError(true)
+      return
+    }
+
     const cleanWhatsapp = sanitizePhone(whatsappNumber)
     if (whatsappNumber.trim() && cleanWhatsapp.length < 8) {
       setStatus('El número de WhatsApp parece incompleto. Revisa el formato internacional.')
@@ -188,6 +196,7 @@ export default function CreateEntrepreneur() {
       appendCreatedEntrepreneur({
         id: `draft-${response.draft.id}`,
         nombre: productName.trim() || inferProductName(notes),
+        precio: normalizedPrice,
         descripcion: selectedDescription.trim(),
         preview: previewForCard,
         enlace: '#',
@@ -214,6 +223,7 @@ export default function CreateEntrepreneur() {
     setProductImage(null)
     setPreviewUrl('')
     setProductName('')
+    setProductPrice('')
     setWhatsappNumber('')
     setNotes('')
     setAudioBlob(null)
@@ -319,6 +329,18 @@ export default function CreateEntrepreneur() {
                 value={whatsappNumber}
                 onChange={(event) => setWhatsappNumber(event.target.value)}
                 placeholder="Ejemplo: 50255554444"
+                className={styles.textInput}
+              />
+
+              <label htmlFor="product-price">Precio del producto</label>
+              <input
+                id="product-price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={productPrice}
+                onChange={(event) => setProductPrice(event.target.value)}
+                placeholder="Ejemplo: 15.00"
                 className={styles.textInput}
               />
 
@@ -458,4 +480,15 @@ function inferProductName(notes) {
 
 function sanitizePhone(value) {
   return String(value || '').replace(/\D/g, '')
+}
+
+function normalizePriceInput(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+
+  const normalized = raw.replace(',', '.')
+  const amount = Number(normalized)
+  if (!Number.isFinite(amount) || amount <= 0) return null
+
+  return Number(amount.toFixed(2))
 }
