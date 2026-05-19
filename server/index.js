@@ -23,6 +23,7 @@ if (missingEnvVars.length > 0) {
 const app = express();
 const port = Number(process.env.PORT || 4000);
 const creationDraftsTable = "creation_drafts";
+const entrepreneurProfilesTable = "entrepreneur_profiles";
 const geminiTextModel = process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash";
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -329,6 +330,139 @@ app.get("/api/auth/me", async (req, res) => {
   });
 });
 
+app.get("/api/profile/me", async (req, res) => {
+  const token = getBearerToken(req.headers.authorization);
+  if (!token) {
+    res.status(401).json({ message: "Token no enviado." });
+    return;
+  }
+
+  const authUser = await getAuthenticatedUser(token);
+  if (!authUser) {
+    res.status(401).json({ message: "Token inválido o expirado." });
+    return;
+  }
+
+  const { data, error } = await supabaseDb
+    .from(entrepreneurProfilesTable)
+    .select("business_name, business_description, business_photo_url")
+    .eq("user_id", authUser.id)
+    .maybeSingle();
+
+  if (error) {
+    res.status(mapDbErrorStatus(error)).json({
+      message: mapProfileDbError(error),
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+    return;
+  }
+
+  res.json({
+    message: "Perfil cargado correctamente.",
+    profile: toProfileResponse(data, authUser),
+  });
+});
+
+app.put("/api/profile/me", async (req, res) => {
+  const token = getBearerToken(req.headers.authorization);
+  if (!token) {
+    res.status(401).json({ message: "Token no enviado." });
+    return;
+  }
+
+  const authUser = await getAuthenticatedUser(token);
+  if (!authUser) {
+    res.status(401).json({ message: "Token inválido o expirado." });
+    return;
+  }
+
+  const businessName = sanitizeOptionalText(req.body?.businessName, 120);
+  const businessDescription = sanitizeOptionalText(req.body?.businessDescription, 500);
+
+  if (businessDescription.length > 500) {
+    res.status(400).json({ message: "La descripción no puede superar 500 caracteres." });
+    return;
+  }
+
+  const payload = {
+    user_id: authUser.id,
+    business_name: businessName,
+    business_description: businessDescription,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabaseDb
+    .from(entrepreneurProfilesTable)
+    .upsert(payload, { onConflict: "user_id" })
+    .select("business_name, business_description, business_photo_url")
+    .single();
+
+  if (error) {
+    res.status(mapDbErrorStatus(error)).json({
+      message: mapProfileDbError(error),
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+    return;
+  }
+
+  res.json({
+    message: "Perfil actualizado correctamente.",
+    profile: toProfileResponse(data, authUser),
+  });
+});
+
+app.put("/api/profile/me/photo", upload.single("photo"), async (req, res) => {
+  const token = getBearerToken(req.headers.authorization);
+  if (!token) {
+    res.status(401).json({ message: "Token no enviado." });
+    return;
+  }
+
+  const authUser = await getAuthenticatedUser(token);
+  if (!authUser) {
+    res.status(401).json({ message: "Token inválido o expirado." });
+    return;
+  }
+
+  const photoFile = req.file;
+  if (!photoFile) {
+    res.status(400).json({ message: "Debes enviar una foto para actualizar el perfil." });
+    return;
+  }
+
+  const allowedMimes = ["image/png", "image/jpeg", "image/webp"];
+  if (!allowedMimes.includes(photoFile.mimetype)) {
+    res.status(400).json({ message: "Formato de imagen no permitido. Usa PNG, JPG o WebP." });
+    return;
+  }
+
+  const encodedPhoto = `data:${photoFile.mimetype};base64,${photoFile.buffer.toString("base64")}`;
+  const payload = {
+    user_id: authUser.id,
+    business_photo_url: encodedPhoto,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabaseDb
+    .from(entrepreneurProfilesTable)
+    .upsert(payload, { onConflict: "user_id" })
+    .select("business_name, business_description, business_photo_url")
+    .single();
+
+  if (error) {
+    res.status(mapDbErrorStatus(error)).json({
+      message: mapProfileDbError(error),
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+    return;
+  }
+
+  res.json({
+    message: "Foto actualizada correctamente.",
+    profile: toProfileResponse(data, authUser),
+  });
+});
+
 app.use((error, _req, res, _next) => {
   console.error("Unhandled API error:", error);
   res.status(500).json({ message: "Error interno del servidor." });
@@ -363,6 +497,27 @@ function getBearerToken(authorizationHeader) {
   }
 
   return authorizationHeader.slice("Bearer ".length).trim();
+}
+
+async function getAuthenticatedUser(token) {
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) return null;
+  return data.user;
+}
+
+function sanitizeOptionalText(value, maxLength) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, maxLength);
+}
+
+function toProfileResponse(profileRow, user) {
+  return {
+    businessName: profileRow?.business_name ?? "",
+    businessDescription: profileRow?.business_description ?? "",
+    businessPhotoUrl: profileRow?.business_photo_url ?? "",
+    accountEmail: user?.email ?? "",
+    accountFullName: user?.user_metadata?.full_name ?? "",
+  };
 }
 
 function normalizeAuthError(message = "") {
@@ -513,5 +668,17 @@ function mapDraftDbError(error, usingServiceRole) {
   }
 
   return error?.message || "No se pudo guardar el borrador en Supabase.";
+}
+
+function mapProfileDbError(error) {
+  if (error?.code === "42P01") {
+    return `La tabla '${entrepreneurProfilesTable}' no existe en Supabase. Ejecuta el SQL setup_entrepreneur_profiles.sql.`;
+  }
+
+  if (error?.code === "42501") {
+    return "No hay permisos suficientes para gestionar el perfil del negocio.";
+  }
+
+  return error?.message || "No se pudo gestionar el perfil del negocio.";
 }
 
