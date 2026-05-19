@@ -187,7 +187,6 @@ export default function Profile() {
           {!isError && (
             <>
               <section className={styles.section}>
-                <h2>Negocio</h2>
                 <div className={styles.photoWrap}>
                   <button
                     ref={photoButtonRef}
@@ -286,10 +285,7 @@ export default function Profile() {
                     </button>
                   </div>
                 </div>
-              </section>
 
-              <section className={styles.section}>
-                <h2>Cuenta</h2>
                 <div className={styles.fieldGroup}>
                   <label htmlFor="account-email">Correo de cuenta</label>
                   <input id="account-email" type="text" value={profile?.accountEmail || ''} disabled />
@@ -298,10 +294,7 @@ export default function Profile() {
                   <label htmlFor="account-name">Nombre de cuenta</label>
                   <input id="account-name" type="text" value={profile?.accountFullName || ''} disabled />
                 </div>
-              </section>
 
-              <section className={styles.section}>
-                <h2>Acciones</h2>
                 <p className={styles.statusText}>
                   {statusMessage || 'Aquí verás estados de guardado, carga de foto y validaciones.'}
                 </p>
