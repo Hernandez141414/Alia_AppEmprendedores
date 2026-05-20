@@ -88,3 +88,16 @@ Los endpoints de IA usan Gemini:
 En el modal de "Ver más", el botón "Comunícate" abre WhatsApp.
 - Si el producto trae un número propio (`whatsapp` o `telefono`), usa ese.
 - Si no trae número, usa `VITE_DEFAULT_WHATSAPP`.
+
+## Novedades recientes (Perfil)
+
+- Se implementó la vista `/perfil` con layout responsive y campos de negocio/cuenta, incluyendo edición de nombre y descripción, manejo de foto (subir, reemplazar y ver en modal) y botón de cerrar sesión.
+- Se agregaron endpoints backend para perfil:
+  - `GET /api/profile/me`
+  - `PUT /api/profile/me`
+  - `PUT /api/profile/me/photo`
+- Se agregó script SQL para la tabla de perfil de emprendedor:
+  - `supabase/setup_entrepreneur_profiles.sql`
+- Importante: si no ejecutas ese SQL en Supabase, `/perfil` puede fallar por tabla faltante (`public.entrepreneur_profiles`).
+- Rama `profile-mock`: contiene versión mock de perfil para pruebas visuales sin depender de la base de datos.
+- Rama `profile-page`: contiene versión conectada al backend/Supabase.
